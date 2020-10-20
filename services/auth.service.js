@@ -1,32 +1,31 @@
 import axios from 'axios';
+import Header from './auth-header'
 import { AsyncStorage } from 'react-native';
 
-const API_URL = 'http://localhost:3001/api/auth/'
+const API_URL = 'http://192.168.0.23:3001/users'
 
-const storeData = async (key, value) => {
+const storeData = async (value) => {
     try {
-        await AsyncStorage.setItem(key, value);
-    } catch (error) {
-        // Error saving data
+      const jsonValue = JSON.stringify(value)
+      await AsyncStorage.setItem('user', jsonValue)
+    } catch (e) {
+      // saving error
+      console.log(error)
+    }
+  }
+
+const getData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('user')
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch(e) {
+      // error reading value
+      console.log(error)
     }
 }
-
-const getData = async (key) => {
+const removeData = async () =>{
     try {
-        const value = await AsyncStorage.getItem(key);
-        if (value !== null) {
-            // Our data is fetched successfully
-            console.log(value);
-        }
-    } catch (error) {
-        // Error retrieving data
-        console.log(error);
-    }
-}
-
-const removeData = async (key) =>{
-    try {
-        await AsyncStorage.removeItem(key);
+        await AsyncStorage.removeItem('user');
         return true;
     }
     catch(exception) {
@@ -35,33 +34,36 @@ const removeData = async (key) =>{
 }
 
 const register = (pseudo, email, password) => {
-    return axios.post(`${API_URL}signup`, {
-        pseudo,
-        email,
-        password
+    return axios.post(API_URL, {
+        body: JSON.stringify({
+            pseudo: pseudo,
+            email: email,
+            password: password,
+        })
+        
     })
 };
 
 const login = (email, password) => {
-    return axios.post(`${API_URL}signin`, {
-        email,
-        password
-    })
+    return axios.post(API_URL + 'signin', {
+        email: email,
+        password: password
+    }, Header)
     .then((response) => {
         if (response.data.accessToken) {
-            storeData('user', JSON.stringify(response.data))
+            storeData(response.data)
         }
         return response.data
     })
     .catch((error) => console.log(error))
 };
 
-const logout = (props) => {
+const logout = () => {
     removeData('user')
 };
 
 const getCurrentUser = () => {
-    return console.log(getData('user'))
+    return console.log(getData())
 };
 
 export default {

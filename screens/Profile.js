@@ -1,11 +1,18 @@
-import { NavigationContainer } from '@react-navigation/native';
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { AsyncStorage, Alert, Text, StyleSheet, Button } from 'react-native';
 import { ScreenContainer } from 'react-native-screens';
-import { AuthContext } from '../context'
 
 export default function Profile({ navigation }) {
-    const { signOut } = useContext(AuthContext)
+    const signOut = async() => {
+        try {
+            await AsyncStorage.removeItem('user');
+            Alert.alert('Logout Success!');
+            navigation.push( 'SignIn' );
+          } catch (error) {
+            console.log('AsyncStorage error: ' + error.message);
+          }
+    }
+
     return (
         <ScreenContainer style={styles.container}>
             <Text>Profile Screen</Text>

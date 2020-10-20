@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
+// @refresh state
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator }  from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer'
-
-import { AuthContext } from './context'
-import SignIn from './screens/SignIn';
-import CreateAccount from './screens/CreateAccount';
+import AsyncStorage from '@react-native-community/async-storage'
+import axios from 'axios'
+import AuthContext from './context'
+import SignIn from './screens/SignIn'
 import Search from './screens/Search';
 import Home from './screens/Home';
 import Details from './screens/Details';
 import Search2 from './screens/Search2';
 import Profile from './screens/Profile'
-import { ActivityIndicator, SafeAreaView, StyleSheet } from 'react-native';
+import { ActivityIndicator, SafeAreaView, StyleSheet, } from 'react-native';
 
+const API_URL = 'http://localhost:3001/api/auth/'
 
 const HomeStack = createStackNavigator();
 
@@ -65,17 +67,16 @@ const DrawerScreen = () => (
 const AuthStack = createStackNavigator();
 
 const AuthStackScreen = () => (
-  <AuthStack.Navigator>
+  <AuthStack.Navigator headerMode='none'>
     <AuthStack.Screen name='SignIn' component={SignIn} options={{ title: 'Sign In'}}/>
-    <AuthStack.Screen name='CreateAccount' component={CreateAccount} options={{ title: 'Create Account'}}/>
   </AuthStack.Navigator>
 )
 
 const RootStack = createStackNavigator()
 
-const RootStackScreen = ({userToken}) => (
+const RootStackScreen = ({user}) => (
   <RootStack.Navigator headerMode='none'>
-    {userToken ? (
+    {user ? (
     <RootStack.Screen name='App' component={DrawerScreen} options={{ animationEnabled: false}}/>
     ) : (
     <RootStack.Screen name='Auth' component={AuthStackScreen} options={{ animationEnabled: false}}/>
@@ -85,29 +86,14 @@ const RootStackScreen = ({userToken}) => (
 
 export default () => {
   const [isLoading, setIsLoading] = useState(true)
-  const [userToken, setUserToken] = useState(null)
-
-  const authContext = useMemo(() => {
-    return {
-      signIn: () => {
-        setIsLoading(false);
-        setUserToken('asdf')
-      },
-      signUp: () => {
-        setIsLoading(false);
-        setUserToken('asdf')
-      },
-      signOut: () => {
-        setIsLoading(false);
-        setUserToken(null)
-      },
-    }
-  }, [])
-
+  const [user, setUser] = useState(null)
+  
   useEffect(() => {
-    setTimeout(()=>{
-      setIsLoading(false)
-    }, 1000)
+    AsyncStorage.getItem('user').then((user) => {
+      user && user.accessToken ? setUser(JSON.parse(user)) : ''
+    }).catch(err => console.log(err))
+    setIsLoading(false)
+    console.log(user)
   }, [])
 
   if (isLoading) {
@@ -118,11 +104,9 @@ export default () => {
     )
   }
   return (
-    <AuthContext.Provider value={authContext}> 
       <NavigationContainer>
-        <RootStackScreen userToken={userToken}/>
+        <RootStackScreen user={user}/>
       </NavigationContainer>
-    </AuthContext.Provider>
   )}
 
 const styles = StyleSheet.create({
