@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useReducer } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator }  from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer'
-
+import AsyncStorage from '@react-native-community/async-storage';
 import { AuthContext } from './context'
 import SignIn from './screens/SignIn';
 import CreateAccount from './screens/CreateAccount';
@@ -13,8 +13,9 @@ import Details from './screens/Details';
 import Search2 from './screens/Search2';
 import Profile from './screens/Profile'
 import { ActivityIndicator, SafeAreaView, StyleSheet } from 'react-native';
+import axios from 'axios'
 
-
+const API_URL = 'http://192.168.0.23:3001/api/auth/'
 const HomeStack = createStackNavigator();
 
 const HomeStackScreen = () => (
@@ -65,7 +66,7 @@ const DrawerScreen = () => (
 const AuthStack = createStackNavigator();
 
 const AuthStackScreen = () => (
-  <AuthStack.Navigator>
+  <AuthStack.Navigator headerMode='none'>
     <AuthStack.Screen name='SignIn' component={SignIn} options={{ title: 'Sign In'}}/>
     <AuthStack.Screen name='CreateAccount' component={CreateAccount} options={{ title: 'Create Account'}}/>
   </AuthStack.Navigator>
@@ -73,9 +74,9 @@ const AuthStackScreen = () => (
 
 const RootStack = createStackNavigator()
 
-const RootStackScreen = ({userToken}) => (
+const RootStackScreen = ({token}) => (
   <RootStack.Navigator headerMode='none'>
-    {userToken ? (
+    {token ? (
     <RootStack.Screen name='App' component={DrawerScreen} options={{ animationEnabled: false}}/>
     ) : (
     <RootStack.Screen name='Auth' component={AuthStackScreen} options={{ animationEnabled: false}}/>
@@ -84,31 +85,118 @@ const RootStackScreen = ({userToken}) => (
 )
 
 export default () => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [userToken, setUserToken] = useState(null)
+  // initialLoginState = {
+    const [isLoading,setIsLoading] = useState(true)
+    const [username, setUsername] = useState(null)
+    const [userEmail, setUserEmail] = useState(null)
+    const [token, setToken] = useState(null)
+  // }
 
-  const authContext = useMemo(() => {
-    return {
-      signIn: () => {
-        setIsLoading(false);
-        setUserToken('asdf')
-      },
-      signUp: () => {
-        setIsLoading(false);
-        setUserToken('asdf')
-      },
-      signOut: () => {
-        setIsLoading(false);
-        setUserToken(null)
-      },
-    }
-  }, [])
+  // const loginReducer = (prevState, action) => {
+  //   switch (action.type) {
+  //     case 'RETRIEVE_TOKEN':
+  //       return {
+  //         ...prevState,
+  //         username: action.pseudo,
+  //         email: action.email, 
+  //         token: action.token,
+  //         isLoading: false,
+  //       };
+  //     case 'LOGIN':
+  //       return {
+  //         ...prevState,
+  //         username: action.pseudo,
+  //         email: action.email, 
+  //         token: action.token,
+  //         isLoading: false,
+  //       };
+  //     case 'LOGOUT':
+  //       return {
+  //         ...prevState,
+  //         username: null,
+  //         email: null, 
+  //         token: null,
+  //         isLoading: false,
+  //       };
+  //     case 'REGISTER':
+  //       return {
+  //         ...prevState,
+  //         username: action.pseudo,
+  //         email: action.email, 
+  //         token: action.token,
+  //         isLoading: false,
+  //       };
+  //   }
+  // }
+
+  // const [ loginState, dispatch ] = useReducer(loginReducer, initialLoginState)
+
+  const authContext = useMemo(() => ({
+    signIn: (email, password) => {
+      let user = null
+      return axios.post(API_URL + 'signin', {
+        email,
+        password
+      })
+		.then(async(response) => {
+			if (response.data) {
+        try {
+          setUsername(response.data.pseudo)
+          setUserEmail(response.data.email)
+          setToken(response.data.accessToken)
+          user = JSON.stringify(response.data)
+          // pseudo = response.data.pseudo
+          // mail = response.data.email
+          // token = response.data.accessToken
+          await AsyncStorage.setItem('user', user)
+        }catch (e) {
+          // saving error
+          console.log(e)
+        }
+			}
+      return response.data;
+		})
+    },
+    signUp: (pseudo, email, password) => {
+      // setUserToken('asdf')
+      return axios.post(API_URL + 'signup', {
+        pseudo,
+        email,
+        password
+      }).then(() => signIn(email, password))
+    },
+    signOut: async() => {
+      try {
+        await AsyncStorage.removeItem('user')
+      } catch(e) {
+        console.log(e);
+      }
+      setUsername(null)
+      setUserEmail(null)
+      setToken(null)
+      setIsLoading(false);
+    },
+  }), [])
 
   useEffect(() => {
-    setTimeout(()=>{
+    setTimeout(async()=>{
+      let user = null;
+      try {
+        let jsonGetValue = await AsyncStorage.getItem('user')
+        if (jsonGetValue != null) {
+          user = JSON.parse(jsonGetValue)
+          setUsername(user.pseudo)
+          setUserEmail(user.email)
+          setToken(user.accessToken)
+         }
+      } catch(e) {
+        console.log(e);
+      }
+     
       setIsLoading(false)
     }, 1000)
-  }, [])
+    
+  }, [username, userEmail, token])
 
   if (isLoading) {
     return (
@@ -120,7 +208,7 @@ export default () => {
   return (
     <AuthContext.Provider value={authContext}> 
       <NavigationContainer>
-        <RootStackScreen userToken={userToken}/>
+        <RootStackScreen token = {token} />
       </NavigationContainer>
     </AuthContext.Provider>
   )}
