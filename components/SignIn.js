@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, TextInput, Image, Modal, StyleSheet, TouchableHighlight, ImageBackground, Alert } from 'react-native';
 import { AuthContext } from '../context'
 import colors from '../config/colors';
-import Users from '../modelUser'
 
 export default function SignIn() {
     const [logModalVisible, setLogModalVisible] = useState(false);
@@ -60,7 +59,7 @@ export default function SignIn() {
     }, [])
 
     return (
-        <ImageBackground style={styles.background}source={require('../assets/background.jpg')}> 
+        <ImageBackground style={styles.background} source={{uri: 'https://london.frenchmorning.com/wp-content/uploads/sites/10/2018/09/cine%CC%81ma.jpg'}}> 
             <Modal animationType="slide" transparent={true} visible={logModalVisible} onRequestClose={() => {Alert.alert("Modal has been closed.")}}>
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
@@ -168,10 +167,10 @@ export default function SignIn() {
             </Modal>
                     <View style={styles.logoContainer}>
             <Image style={styles.logo} source={require('../assets/logo_ct_rondnoir_blanc.png')}/>
-            <Text>Sell What You Don't Need</Text>
+            <Text style={styles.underLogo}>Cinéma & Co</Text>
             </View>
-            <TouchableHighlight style={styles.loginButton} onPress={() => {setLogModalVisible(true)}}><Text>Login</Text></TouchableHighlight>
-            <TouchableHighlight style={styles.registerButton} onPress={() => {setRegModalVisible(true)}}><Text>Sign in</Text></TouchableHighlight>
+            <TouchableHighlight style={styles.loginButton} onPress={() => {setLogModalVisible(true)}}><Text style={styles.buttonText}>Login</Text></TouchableHighlight>
+            <TouchableHighlight style={styles.registerButton} onPress={() => {setRegModalVisible(true)}}><Text style={styles.buttonText}>Sign in</Text></TouchableHighlight>
         </ImageBackground>
     )
 }
@@ -190,23 +189,15 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
         alignItems: "center"
     },
-    loginButton: {
-        width: "100%",
-        height: 70,
-        backgroundColor: colors.secondary,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    registerButton: {
-        width: "100%",
-        height: 70,
-        backgroundColor: colors.primary,
-        justifyContent: "center",
-        alignItems: "center"
-    },
     logo:{
         width:100,
         height: 100,
+        marginBottom: 30,
+    },
+    underLogo: {
+        fontSize: 17,
+        fontStyle: "italic",
+        fontWeight: "bold"
     },
     logoContainer: {
         position: "absolute",
@@ -249,6 +240,22 @@ const styles = StyleSheet.create({
         padding: 10,
         elevation: 2
     },
+    loginButton: {
+        backgroundColor: colors.secondary,
+        padding: 10,
+        width: '100%',
+        alignItems: "center",
+        justifyContent: 'center',
+        height: 70,
+    },
+    registerButton: {
+        backgroundColor: colors.primary,
+        padding: 10,
+        width: '100%',
+        alignItems: "center",
+        justifyContent: 'center',
+        height: 70,
+    },
     textStyle: {
         color: "white",
         fontWeight: "bold",
@@ -268,4 +275,8 @@ const styles = StyleSheet.create({
         borderBottomColor: "#000",
         width: "100%",
     },
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 18,
+    }
 })

@@ -5,13 +5,13 @@ import { createBottomTabNavigator }  from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer'
 import AsyncStorage from '@react-native-community/async-storage';
 import { AuthContext } from './context'
-import SignIn from './screens/SignIn';
-import CreateAccount from './screens/CreateAccount';
-import Search from './screens/Search';
-import Home from './screens/Home';
-import Details from './screens/Details';
-import Search2 from './screens/Search2';
-import Profile from './screens/Profile'
+import SignIn from './components/SignIn';
+import CreateAccount from './components/CreateAccount';
+import Search from './components/Search';
+import Home from './components/Home';
+import Details from './components/Details';
+import Search2 from './components/Search2';
+import Profile from './components/Profile'
 import { ActivityIndicator, SafeAreaView, StyleSheet } from 'react-native';
 import axios from 'axios'
 
@@ -22,7 +22,7 @@ const HomeStackScreen = () => (
   <HomeStack.Navigator>
     <HomeStack.Screen name='Home' component={Home}/>
     <HomeStack.Screen name='Details' component={Details} options={({route})=>({
-      title: route.params.name
+      title: route.params.title
     })}
     />
   </HomeStack.Navigator>
@@ -33,7 +33,9 @@ const SearchStack = createStackNavigator();
 const SearchStackScreen = () => (
   <SearchStack.Navigator>
     <SearchStack.Screen name='Search' component={Search}/>
-    <SearchStack.Screen name='Search2' component={Search2}/>
+    <SearchStack.Screen name='Détails' component={Details} options={({route})=>({
+      id: route.params.id
+    })}/>
   </SearchStack.Navigator>
 )
 
@@ -57,7 +59,7 @@ const TabsScreen = () => (
 const Drawer = createDrawerNavigator()
 
 const DrawerScreen = () => (
-  <Drawer.Navigator initialRouteName='Profile'>
+  <Drawer.Navigator initialRouteName='Home'>
     <Drawer.Screen name='Home' component={TabsScreen} />
     <Drawer.Screen name='Profile' component={ProfileStackScreen} />
   </Drawer.Navigator>
